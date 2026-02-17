@@ -1,1 +1,1 @@
-# krotov_cv
+# Computer vision homework
