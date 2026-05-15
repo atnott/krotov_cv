@@ -6,34 +6,38 @@ import time
 
 pyautogui.PAUSE = 0
 
-JUMP_DURATION = 0.20
+JUMP_DURATION = 0.135
 DUCK_DURATION = 0.20
 
-MIN_JUMP = 0.05
-MIN_DUCK = 0.06
+START_LEFT = 508
+START_WIDTH = 25
+
+current_left = START_LEFT
+current_width = START_WIDTH
+
+MAX_LEFT = 590
+MAX_WIDTH = 55
+
+monitor = {"top": 285, "left": current_left, "width": current_width, "height": 35}
 
 start_time = time.time()
 last_speed_up_time = start_time
 
-cnt = 0
-
-monitor = {"top": 285, "left": 508, "width": 30, "height": 35}
-
 with mss.mss() as sct:
-     while True:
+    while True:
         current_time = time.time()
 
-        if current_time - last_speed_up_time >= 30.0:
-            if JUMP_DURATION > MIN_JUMP:
-                JUMP_DURATION = max(MIN_JUMP, JUMP_DURATION - 0.015)
-            if DUCK_DURATION > MIN_DUCK:
-                DUCK_DURATION = max(MIN_DUCK, DUCK_DURATION - 0.015)
+        if current_time - last_speed_up_time >= 25:
+            if current_left < MAX_LEFT:
+                current_left += 5
+
+            if current_width < MAX_WIDTH:
+                current_width += 2
+
+            monitor['left'] = current_left
+            monitor['width'] = current_width
 
             last_speed_up_time = current_time
-            cnt += 1
-
-        if cnt % 2 == 0 and cnt > 0:
-            monitor['width'] += 5
 
         img = np.array(sct.grab(monitor))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -49,7 +53,7 @@ with mss.mss() as sct:
             pyautogui.press('space')
             time.sleep(JUMP_DURATION)
             pyautogui.keyDown('down')
-            time.sleep(0.05)
+            time.sleep(0.04)
             pyautogui.keyUp('down')
 
         elif np.mean(top_half) < 247:
@@ -57,7 +61,8 @@ with mss.mss() as sct:
             time.sleep(DUCK_DURATION)
             pyautogui.keyUp('down')
 
-        cv2.imshow("game", gray)
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        cv2.imshow('game', gray)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+cv2.destroyAllWindows()
