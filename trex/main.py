@@ -23,16 +23,23 @@ monitor = {"top": 285, "left": current_left, "width": current_width, "height": 3
 start_time = time.time()
 last_speed_up_time = start_time
 
+cnt_time = 0
+
 with mss.mss() as sct:
     while True:
         current_time = time.time()
 
-        if current_time - last_speed_up_time >= 25:
+        temp = current_time - last_speed_up_time
+        if temp >= 20:
             if current_left < MAX_LEFT:
-                current_left += 5
+                current_left += 1
 
             if current_width < MAX_WIDTH:
-                current_width += 2
+                if cnt_time < 160:
+                    current_width += 2
+                else:
+                    current_width += 5
+            cnt_time += 20
 
             monitor['left'] = current_left
             monitor['width'] = current_width
@@ -42,9 +49,6 @@ with mss.mss() as sct:
         img = np.array(sct.grab(monitor))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        if np.mean(gray) < 127:
-            gray = cv2.bitwise_not(gray)
-
         height, width = gray.shape
         bottom_half = gray[height // 2:, :]
         top_half = gray[:height // 2, :]
@@ -53,7 +57,8 @@ with mss.mss() as sct:
             pyautogui.press('space')
             time.sleep(JUMP_DURATION)
             pyautogui.keyDown('down')
-            time.sleep(0.04)
+            if cnt_time > 160:
+                time.sleep(0.03)
             pyautogui.keyUp('down')
 
         elif np.mean(top_half) < 247:
@@ -61,7 +66,7 @@ with mss.mss() as sct:
             time.sleep(DUCK_DURATION)
             pyautogui.keyUp('down')
 
-        cv2.imshow('game', gray)
+        # cv2.imshow('game', gray)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
